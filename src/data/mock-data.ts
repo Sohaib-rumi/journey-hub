@@ -62,7 +62,7 @@ export const mockBookings: Booking[] = [
     bookingDate: '2024-03-18',
     status: 'pending',
     travelers: [
-      { id: 't3', name: 'Ahmed Khan', relationship: 'Self' },
+      { id: 't3', name: 'Ahmed Khan', passportNumber: 'PK4829173', relationship: 'Self' },
     ],
     services: [
       {
