@@ -100,10 +100,11 @@ export const mockBookings: Booking[] = [
     csr: 'Sarah Johnson',
     bookingDate: '2024-03-20',
     status: 'completed',
+    passportNumber: 'GB1029384',
     travelers: [
-      { id: 't4', name: 'Sophie Turner', relationship: 'Self' },
-      { id: 't5', name: 'Liam Turner', relationship: 'Child' },
-      { id: 't6', name: 'Olivia Turner', relationship: 'Child' },
+      { id: 't4', name: 'Sophie Turner', passportNumber: 'GB1029384', relationship: 'Self' },
+      { id: 't5', name: 'Liam Turner', passportNumber: 'GB1029385', relationship: 'Child' },
+      { id: 't6', name: 'Olivia Turner', passportNumber: 'GB1029386', relationship: 'Child' },
     ],
     services: [
       {
