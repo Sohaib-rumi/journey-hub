@@ -9,9 +9,10 @@ export const mockBookings: Booking[] = [
     csr: 'Sarah Johnson',
     bookingDate: '2024-03-15',
     status: 'confirmed',
+    passportNumber: 'GB8374921',
     travelers: [
-      { id: 't1', name: 'James Richardson', relationship: 'Self' },
-      { id: 't2', name: 'Emma Richardson', relationship: 'Spouse' },
+      { id: 't1', name: 'James Richardson', passportNumber: 'GB8374921', relationship: 'Self' },
+      { id: 't2', name: 'Emma Richardson', passportNumber: 'GB8374922', relationship: 'Spouse' },
     ],
     services: [
       {
