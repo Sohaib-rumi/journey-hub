@@ -5,21 +5,24 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { mockBookings, csrList } from '@/data/mock-data';
+import { useBookings } from '@/context/BookingContext';
+import { csrList } from '@/data/mock-data';
 import { getTotalCost, getTotalSelling, formatCurrency, getStatusColor } from '@/lib/booking-utils';
-import { Search, Plus, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, Plus, ChevronLeft, ChevronRight, Trash2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { toast } from 'sonner';
 
 const PAGE_SIZE = 10;
 
 export default function BookingsPage() {
+  const { bookings, deleteBooking } = useBookings();
   const [search, setSearch] = useState('');
   const [csrFilter, setCsrFilter] = useState('all');
   const [typeFilter, setTypeFilter] = useState('all');
   const [page, setPage] = useState(1);
 
   const filtered = useMemo(() => {
-    return mockBookings.filter((b) => {
+    return bookings.filter((b) => {
       const matchesSearch =
         b.id.toLowerCase().includes(search.toLowerCase()) ||
         b.customerName.toLowerCase().includes(search.toLowerCase());
@@ -27,10 +30,15 @@ export default function BookingsPage() {
       const matchesType = typeFilter === 'all' || b.bookingType === typeFilter;
       return matchesSearch && matchesCsr && matchesType;
     });
-  }, [search, csrFilter, typeFilter]);
+  }, [bookings, search, csrFilter, typeFilter]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+  const handleDelete = (id: string, name: string) => {
+    deleteBooking(id);
+    toast.success(`Booking for ${name} deleted`);
+  };
 
   return (
     <DashboardLayout>
@@ -58,6 +66,7 @@ export default function BookingsPage() {
                 value={search}
                 onChange={(e) => { setSearch(e.target.value); setPage(1); }}
                 className="pl-9 h-9 bg-secondary border-0"
+                maxLength={100}
               />
             </div>
             <Select value={csrFilter} onValueChange={(v) => { setCsrFilter(v); setPage(1); }}>
@@ -131,9 +140,19 @@ export default function BookingsPage() {
                         </span>
                       </td>
                       <td className="py-3 pr-3">
-                        <Link to={`/bookings/${b.id}`}>
-                          <Button variant="ghost" size="sm" className="text-xs h-7">View</Button>
-                        </Link>
+                        <div className="flex gap-1">
+                          <Link to={`/bookings/${b.id}`}>
+                            <Button variant="ghost" size="sm" className="text-xs h-7">View</Button>
+                          </Link>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7"
+                            onClick={() => handleDelete(b.id, b.customerName)}
+                          >
+                            <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                          </Button>
+                        </div>
                       </td>
                     </tr>
                   );

@@ -1,47 +1,49 @@
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { Card } from '@/components/ui/card';
-import { mockBookings } from '@/data/mock-data';
+import { useBookings } from '@/context/BookingContext';
 import { getTotalCost, getTotalSelling, formatCurrency } from '@/lib/booking-utils';
 import { BookOpen, TrendingUp, Users, Plane } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
-const stats = [
-  {
-    label: 'Total Bookings',
-    value: mockBookings.length,
-    icon: BookOpen,
-    change: '+12%',
-    color: 'text-primary bg-primary/10',
-  },
-  {
-    label: 'Revenue',
-    value: formatCurrency(mockBookings.reduce((s, b) => s + getTotalSelling(b.services), 0)),
-    icon: TrendingUp,
-    change: '+8%',
-    color: 'text-success bg-success/10',
-  },
-  {
-    label: 'Total Travelers',
-    value: mockBookings.reduce((s, b) => s + b.travelers.length, 0),
-    icon: Users,
-    change: '+5%',
-    color: 'text-hotel bg-hotel/10',
-  },
-  {
-    label: 'Total Profit',
-    value: formatCurrency(
-      mockBookings.reduce(
-        (s, b) => s + getTotalSelling(b.services) - getTotalCost(b.services),
-        0
-      )
-    ),
-    icon: Plane,
-    change: '+15%',
-    color: 'text-insurance bg-insurance/10',
-  },
-];
-
 export default function Dashboard() {
+  const { bookings } = useBookings();
+
+  const stats = [
+    {
+      label: 'Total Bookings',
+      value: bookings.length,
+      icon: BookOpen,
+      change: '+12%',
+      color: 'text-primary bg-primary/10',
+    },
+    {
+      label: 'Revenue',
+      value: formatCurrency(bookings.reduce((s, b) => s + getTotalSelling(b.services), 0)),
+      icon: TrendingUp,
+      change: '+8%',
+      color: 'text-success bg-success/10',
+    },
+    {
+      label: 'Total Travelers',
+      value: bookings.reduce((s, b) => s + b.travelers.length, 0),
+      icon: Users,
+      change: '+5%',
+      color: 'text-hotel bg-hotel/10',
+    },
+    {
+      label: 'Total Profit',
+      value: formatCurrency(
+        bookings.reduce(
+          (s, b) => s + getTotalSelling(b.services) - getTotalCost(b.services),
+          0
+        )
+      ),
+      icon: Plane,
+      change: '+15%',
+      color: 'text-insurance bg-insurance/10',
+    },
+  ];
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -75,7 +77,7 @@ export default function Dashboard() {
             </Link>
           </div>
           <div className="space-y-3">
-            {mockBookings.slice(0, 4).map((booking) => (
+            {bookings.slice(0, 4).map((booking) => (
               <Link
                 key={booking.id}
                 to={`/bookings/${booking.id}`}

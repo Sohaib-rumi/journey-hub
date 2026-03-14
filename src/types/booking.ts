@@ -5,6 +5,7 @@ export type BookingStatus = 'confirmed' | 'pending' | 'cancelled' | 'completed';
 export interface Traveler {
   id: string;
   name: string;
+  passportNumber?: string;
   relationship: string;
 }
 

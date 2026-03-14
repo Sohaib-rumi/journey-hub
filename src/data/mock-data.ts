@@ -9,9 +9,10 @@ export const mockBookings: Booking[] = [
     csr: 'Sarah Johnson',
     bookingDate: '2024-03-15',
     status: 'confirmed',
+    passportNumber: 'GB8374921',
     travelers: [
-      { id: 't1', name: 'James Richardson', relationship: 'Self' },
-      { id: 't2', name: 'Emma Richardson', relationship: 'Spouse' },
+      { id: 't1', name: 'James Richardson', passportNumber: 'GB8374921', relationship: 'Self' },
+      { id: 't2', name: 'Emma Richardson', passportNumber: 'GB8374922', relationship: 'Spouse' },
     ],
     services: [
       {
@@ -61,7 +62,7 @@ export const mockBookings: Booking[] = [
     bookingDate: '2024-03-18',
     status: 'pending',
     travelers: [
-      { id: 't3', name: 'Ahmed Khan', relationship: 'Self' },
+      { id: 't3', name: 'Ahmed Khan', passportNumber: 'PK4829173', relationship: 'Self' },
     ],
     services: [
       {
@@ -99,10 +100,11 @@ export const mockBookings: Booking[] = [
     csr: 'Sarah Johnson',
     bookingDate: '2024-03-20',
     status: 'completed',
+    passportNumber: 'GB1029384',
     travelers: [
-      { id: 't4', name: 'Sophie Turner', relationship: 'Self' },
-      { id: 't5', name: 'Liam Turner', relationship: 'Child' },
-      { id: 't6', name: 'Olivia Turner', relationship: 'Child' },
+      { id: 't4', name: 'Sophie Turner', passportNumber: 'GB1029384', relationship: 'Self' },
+      { id: 't5', name: 'Liam Turner', passportNumber: 'GB1029385', relationship: 'Child' },
+      { id: 't6', name: 'Olivia Turner', passportNumber: 'GB1029386', relationship: 'Child' },
     ],
     services: [
       {
@@ -135,7 +137,7 @@ export const mockBookings: Booking[] = [
     bookingDate: '2024-03-22',
     status: 'cancelled',
     travelers: [
-      { id: 't7', name: 'Maria Garcia', relationship: 'Self' },
+      { id: 't7', name: 'Maria Garcia', passportNumber: 'ES7382910', relationship: 'Self' },
     ],
     services: [
       {
@@ -157,9 +159,10 @@ export const mockBookings: Booking[] = [
     csr: 'Michael Chen',
     bookingDate: '2024-03-25',
     status: 'confirmed',
+    passportNumber: 'GB5567832',
     travelers: [
-      { id: 't8', name: 'Robert Chen', relationship: 'Self' },
-      { id: 't9', name: 'Lisa Chen', relationship: 'Spouse' },
+      { id: 't8', name: 'Robert Chen', passportNumber: 'GB5567832', relationship: 'Self' },
+      { id: 't9', name: 'Lisa Chen', passportNumber: 'GB5567833', relationship: 'Spouse' },
     ],
     services: [
       {

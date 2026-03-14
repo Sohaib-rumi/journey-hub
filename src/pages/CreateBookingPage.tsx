@@ -7,9 +7,10 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { csrList, customerList, agentList } from '@/data/mock-data';
-import { Booking, BookingType, ServiceType, Traveler, BookingService } from '@/types/booking';
+import { useBookings } from '@/context/BookingContext';
+import { BookingType, ServiceType, Traveler, BookingService } from '@/types/booking';
 import { SERVICE_LABELS, serviceIconMap, serviceColorMap, formatCurrency, getProfit } from '@/lib/booking-utils';
-import { ArrowLeft, ArrowRight, Plus, Trash2, Check } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Plus, Trash2, Check, Edit } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
@@ -40,6 +41,7 @@ function getEmptyDetails(type: ServiceType) {
 
 export default function CreateBookingPage() {
   const navigate = useNavigate();
+  const { addBooking, generateId } = useBookings();
   const [step, setStep] = useState(0);
   const [bookingType, setBookingType] = useState<BookingType>('customer');
   const [customerId, setCustomerId] = useState('');
@@ -50,15 +52,26 @@ export default function CreateBookingPage() {
   const [bookingDate, setBookingDate] = useState('');
   const [travelers, setTravelers] = useState<Traveler[]>([]);
   const [travelerName, setTravelerName] = useState('');
+  const [travelerPassport, setTravelerPassport] = useState('');
   const [travelerRelationship, setTravelerRelationship] = useState('');
   const [services, setServices] = useState<BookingService[]>([]);
   const [editingService, setEditingService] = useState<Partial<BookingService> | null>(null);
   const [serviceType, setServiceType] = useState<ServiceType>('airline');
 
+  const selectedCustomerName = bookingType === 'customer'
+    ? customerList.find(c => c.id === customerId)?.name || ''
+    : customerName;
+
   const addTraveler = () => {
     if (!travelerName.trim()) return;
-    setTravelers([...travelers, { id: crypto.randomUUID(), name: travelerName, relationship: travelerRelationship || 'Self' }]);
+    setTravelers([...travelers, {
+      id: crypto.randomUUID(),
+      name: travelerName.trim(),
+      passportNumber: travelerPassport.trim() || undefined,
+      relationship: travelerRelationship.trim() || 'Self',
+    }]);
     setTravelerName('');
+    setTravelerPassport('');
     setTravelerRelationship('');
   };
 
@@ -77,7 +90,10 @@ export default function CreateBookingPage() {
   };
 
   const saveService = () => {
-    if (!editingService?.name) return;
+    if (!editingService?.name?.trim()) {
+      toast.error('Service name is required');
+      return;
+    }
     const existing = services.findIndex(s => s.id === editingService.id);
     if (existing >= 0) {
       const updated = [...services];
@@ -96,15 +112,29 @@ export default function CreateBookingPage() {
   const totalProfit = totalSelling - totalCost;
 
   const canNext = () => {
-    if (step === 0) return csr && bookingDate && (bookingType === 'customer' ? customerId : subAgentId && customerName);
+    if (step === 0) return csr && bookingDate && (bookingType === 'customer' ? customerId : subAgentId && customerName.trim());
     if (step === 1) return travelers.length > 0;
     if (step === 2) return services.length > 0;
     return true;
   };
 
   const handleSubmit = () => {
+    const newBooking = {
+      id: generateId(),
+      bookingType,
+      customerId: bookingType === 'customer' ? customerId : undefined,
+      customerName: selectedCustomerName,
+      subAgentId: bookingType === 'agent' ? subAgentId : undefined,
+      passportNumber: passportNumber || undefined,
+      csr,
+      bookingDate,
+      status: 'confirmed' as const,
+      travelers,
+      services,
+    };
+    addBooking(newBooking);
     toast.success('Booking created successfully!');
-    navigate('/bookings');
+    navigate(`/bookings/${newBooking.id}`);
   };
 
   const updateDetail = (key: string, value: any) => {
@@ -169,14 +199,26 @@ export default function CreateBookingPage() {
             </div>
 
             {bookingType === 'customer' ? (
-              <div>
-                <Label className="text-xs">Customer</Label>
-                <Select value={customerId} onValueChange={setCustomerId}>
-                  <SelectTrigger className="mt-1"><SelectValue placeholder="Select customer" /></SelectTrigger>
-                  <SelectContent>
-                    {customerList.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-                  </SelectContent>
-                </Select>
+              <div className="space-y-3">
+                <div>
+                  <Label className="text-xs">Customer</Label>
+                  <Select value={customerId} onValueChange={setCustomerId}>
+                    <SelectTrigger className="mt-1"><SelectValue placeholder="Select customer" /></SelectTrigger>
+                    <SelectContent>
+                      {customerList.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-xs">Passport Number</Label>
+                  <Input
+                    value={passportNumber}
+                    onChange={e => setPassportNumber(e.target.value)}
+                    className="mt-1"
+                    placeholder="e.g. GB1234567"
+                    maxLength={20}
+                  />
+                </div>
               </div>
             ) : (
               <div className="space-y-3">
@@ -191,11 +233,11 @@ export default function CreateBookingPage() {
                 </div>
                 <div>
                   <Label className="text-xs">Customer Name</Label>
-                  <Input value={customerName} onChange={e => setCustomerName(e.target.value)} className="mt-1" />
+                  <Input value={customerName} onChange={e => setCustomerName(e.target.value)} className="mt-1" maxLength={100} />
                 </div>
                 <div>
                   <Label className="text-xs">Passport Number</Label>
-                  <Input value={passportNumber} onChange={e => setPassportNumber(e.target.value)} className="mt-1" />
+                  <Input value={passportNumber} onChange={e => setPassportNumber(e.target.value)} className="mt-1" placeholder="e.g. PK1234567" maxLength={20} />
                 </div>
               </div>
             )}
@@ -221,26 +263,39 @@ export default function CreateBookingPage() {
         {/* Step 1: Travelers */}
         {step === 1 && (
           <Card className="p-5 card-shadow space-y-4">
-            <div className="flex gap-3 items-end">
-              <div className="flex-1">
-                <Label className="text-xs">Name</Label>
-                <Input value={travelerName} onChange={e => setTravelerName(e.target.value)} className="mt-1" placeholder="Traveler name" />
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label className="text-xs">Traveler Name</Label>
+                  <Input value={travelerName} onChange={e => setTravelerName(e.target.value)} className="mt-1" placeholder="Full name" maxLength={100} />
+                </div>
+                <div>
+                  <Label className="text-xs">Passport Number</Label>
+                  <Input value={travelerPassport} onChange={e => setTravelerPassport(e.target.value)} className="mt-1" placeholder="e.g. GB1234567" maxLength={20} />
+                </div>
               </div>
-              <div className="w-40">
-                <Label className="text-xs">Relationship</Label>
-                <Input value={travelerRelationship} onChange={e => setTravelerRelationship(e.target.value)} className="mt-1" placeholder="Self, Spouse..." />
+              <div className="flex gap-3 items-end">
+                <div className="flex-1">
+                  <Label className="text-xs">Relationship</Label>
+                  <Input value={travelerRelationship} onChange={e => setTravelerRelationship(e.target.value)} className="mt-1" placeholder="Self, Spouse, Child..." maxLength={50} />
+                </div>
+                <Button onClick={addTraveler} size="sm" className="gap-1 shrink-0">
+                  <Plus className="h-3.5 w-3.5" /> Add Traveler
+                </Button>
               </div>
-              <Button onClick={addTraveler} size="sm" className="gap-1 shrink-0">
-                <Plus className="h-3.5 w-3.5" /> Add
-              </Button>
             </div>
             {travelers.length > 0 && (
               <div className="space-y-2">
                 {travelers.map(t => (
                   <div key={t.id} className="flex items-center justify-between py-2.5 px-3 rounded-lg bg-secondary/50">
-                    <div>
-                      <span className="text-sm font-medium">{t.name}</span>
-                      <Badge variant="secondary" className="ml-2 text-xs">{t.relationship}</Badge>
+                    <div className="flex items-center gap-2">
+                      <div>
+                        <span className="text-sm font-medium">{t.name}</span>
+                        <Badge variant="secondary" className="ml-2 text-xs">{t.relationship}</Badge>
+                      </div>
+                      {t.passportNumber && (
+                        <span className="text-xs text-muted-foreground font-mono ml-2">{t.passportNumber}</span>
+                      )}
                     </div>
                     <Button variant="ghost" size="sm" onClick={() => removeTraveler(t.id)}>
                       <Trash2 className="h-3.5 w-3.5 text-destructive" />
@@ -284,24 +339,23 @@ export default function CreateBookingPage() {
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <Label className="text-xs">Name</Label>
-                    <Input value={editingService.name} onChange={e => setEditingService({ ...editingService, name: e.target.value })} className="mt-1" />
+                    <Label className="text-xs">Name *</Label>
+                    <Input value={editingService.name} onChange={e => setEditingService({ ...editingService, name: e.target.value })} className="mt-1" maxLength={100} />
                   </div>
                   <div>
                     <Label className="text-xs">Vendor</Label>
-                    <Input value={editingService.vendor} onChange={e => setEditingService({ ...editingService, vendor: e.target.value })} className="mt-1" />
+                    <Input value={editingService.vendor} onChange={e => setEditingService({ ...editingService, vendor: e.target.value })} className="mt-1" maxLength={100} />
                   </div>
                   <div>
                     <Label className="text-xs">Cost Price</Label>
-                    <Input type="number" value={editingService.costPrice} onChange={e => setEditingService({ ...editingService, costPrice: +e.target.value })} className="mt-1" />
+                    <Input type="number" min="0" value={editingService.costPrice} onChange={e => setEditingService({ ...editingService, costPrice: Math.max(0, +e.target.value) })} className="mt-1" />
                   </div>
                   <div>
                     <Label className="text-xs">Selling Price</Label>
-                    <Input type="number" value={editingService.sellingPrice} onChange={e => setEditingService({ ...editingService, sellingPrice: +e.target.value })} className="mt-1" />
+                    <Input type="number" min="0" value={editingService.sellingPrice} onChange={e => setEditingService({ ...editingService, sellingPrice: Math.max(0, +e.target.value) })} className="mt-1" />
                   </div>
                 </div>
 
-                {/* Dynamic fields based on service type */}
                 <ServiceDetailFields type={editingService.type!} details={editingService.details as any} onChange={updateDetail} />
 
                 <Button onClick={saveService} className="w-full gap-1">
@@ -346,7 +400,9 @@ export default function CreateBookingPage() {
                             </td>
                             <td className="py-2.5">
                               <div className="flex gap-1">
-                                <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => setEditingService(s)}>Edit</Button>
+                                <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => setEditingService(s)}>
+                                  <Edit className="h-3.5 w-3.5" />
+                                </Button>
                                 <Button variant="ghost" size="sm" className="h-7" onClick={() => removeService(s.id)}>
                                   <Trash2 className="h-3.5 w-3.5 text-destructive" />
                                 </Button>
@@ -367,11 +423,41 @@ export default function CreateBookingPage() {
         {step === 3 && (
           <div className="space-y-4">
             <Card className="p-5 card-shadow">
+              <h3 className="text-sm font-semibold mb-1">Booking Info</h3>
+              <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm mt-3">
+                <div>
+                  <span className="text-xs text-muted-foreground">Type</span>
+                  <p className="font-medium capitalize">{bookingType}</p>
+                </div>
+                <div>
+                  <span className="text-xs text-muted-foreground">Customer</span>
+                  <p className="font-medium">{selectedCustomerName}</p>
+                </div>
+                <div>
+                  <span className="text-xs text-muted-foreground">CSR</span>
+                  <p className="font-medium">{csr}</p>
+                </div>
+                <div>
+                  <span className="text-xs text-muted-foreground">Booking Date</span>
+                  <p className="font-medium">{bookingDate}</p>
+                </div>
+                {passportNumber && (
+                  <div>
+                    <span className="text-xs text-muted-foreground">Passport</span>
+                    <p className="font-medium font-mono">{passportNumber}</p>
+                  </div>
+                )}
+              </div>
+            </Card>
+            <Card className="p-5 card-shadow">
               <h3 className="text-sm font-semibold mb-3">Travelers ({travelers.length})</h3>
               {travelers.map(t => (
-                <div key={t.id} className="flex items-center gap-2 py-1.5">
-                  <span className="text-sm">{t.name}</span>
-                  <Badge variant="secondary" className="text-xs">{t.relationship}</Badge>
+                <div key={t.id} className="flex items-center justify-between py-1.5">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm">{t.name}</span>
+                    <Badge variant="secondary" className="text-xs">{t.relationship}</Badge>
+                  </div>
+                  {t.passportNumber && <span className="text-xs text-muted-foreground font-mono">{t.passportNumber}</span>}
                 </div>
               ))}
             </Card>
@@ -437,8 +523,9 @@ function ServiceDetailFields({ type, details, onChange }: { type: ServiceType; d
       <Input
         type={inputType}
         value={details?.[key] ?? ''}
-        onChange={e => onChange(key, inputType === 'number' ? +e.target.value : e.target.value)}
+        onChange={e => onChange(key, inputType === 'number' ? Math.max(0, +e.target.value) : e.target.value)}
         className="mt-1"
+        maxLength={inputType === 'text' ? 100 : undefined}
       />
     </div>
   );
