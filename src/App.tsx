@@ -5,6 +5,11 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import Index from "./pages/Index.tsx";
 import NotFound from "./pages/NotFound.tsx";
+import BookingsPage from "./pages/BookingsPage.tsx";
+import BookingDetailsPage from "./pages/BookingDetailsPage.tsx";
+import CreateBookingPage from "./pages/CreateBookingPage.tsx";
+import EditBookingPage from "./pages/EditBookingPage.tsx";
+import PlaceholderPage from "./pages/PlaceholderPage.tsx";
 
 const queryClient = new QueryClient();
 
@@ -16,7 +21,14 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+          <Route path="/bookings" element={<BookingsPage />} />
+          <Route path="/bookings/create" element={<CreateBookingPage />} />
+          <Route path="/bookings/:id" element={<BookingDetailsPage />} />
+          <Route path="/bookings/:id/edit" element={<EditBookingPage />} />
+          <Route path="/customers" element={<PlaceholderPage title="Customers" />} />
+          <Route path="/agents" element={<PlaceholderPage title="Agents" />} />
+          <Route path="/vendors" element={<PlaceholderPage title="Vendors" />} />
+          <Route path="/reports" element={<PlaceholderPage title="Reports" />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
