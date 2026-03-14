@@ -137,7 +137,7 @@ export const mockBookings: Booking[] = [
     bookingDate: '2024-03-22',
     status: 'cancelled',
     travelers: [
-      { id: 't7', name: 'Maria Garcia', relationship: 'Self' },
+      { id: 't7', name: 'Maria Garcia', passportNumber: 'ES7382910', relationship: 'Self' },
     ],
     services: [
       {
