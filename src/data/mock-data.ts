@@ -159,9 +159,10 @@ export const mockBookings: Booking[] = [
     csr: 'Michael Chen',
     bookingDate: '2024-03-25',
     status: 'confirmed',
+    passportNumber: 'GB5567832',
     travelers: [
-      { id: 't8', name: 'Robert Chen', relationship: 'Self' },
-      { id: 't9', name: 'Lisa Chen', relationship: 'Spouse' },
+      { id: 't8', name: 'Robert Chen', passportNumber: 'GB5567832', relationship: 'Self' },
+      { id: 't9', name: 'Lisa Chen', passportNumber: 'GB5567833', relationship: 'Spouse' },
     ],
     services: [
       {
