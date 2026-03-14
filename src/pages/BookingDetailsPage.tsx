@@ -1,17 +1,23 @@
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ServiceCard } from '@/components/ServiceCard';
-import { mockBookings } from '@/data/mock-data';
+import { useBookings } from '@/context/BookingContext';
 import { getTotalCost, getTotalSelling, formatCurrency, getStatusColor } from '@/lib/booking-utils';
-import { ArrowLeft, Edit, Calendar, User, Users, Plane } from 'lucide-react';
-import { FlightDetails } from '@/types/booking';
+import { ArrowLeft, Edit, Calendar, User, Users, Plane, Trash2 } from 'lucide-react';
+import { FlightDetails, BookingStatus } from '@/types/booking';
+import { toast } from 'sonner';
+
+const STATUS_OPTIONS: BookingStatus[] = ['confirmed', 'pending', 'cancelled', 'completed'];
 
 export default function BookingDetailsPage() {
   const { id } = useParams();
-  const booking = mockBookings.find((b) => b.id === id);
+  const navigate = useNavigate();
+  const { getBooking, updateBooking, deleteBooking } = useBookings();
+  const booking = getBooking(id!);
 
   if (!booking) {
     return (
@@ -36,6 +42,17 @@ export default function BookingDetailsPage() {
       ]
     : [];
 
+  const handleStatusChange = (status: string) => {
+    updateBooking(booking.id, { status: status as BookingStatus });
+    toast.success(`Status updated to ${status}`);
+  };
+
+  const handleDelete = () => {
+    deleteBooking(booking.id);
+    toast.success('Booking deleted');
+    navigate('/bookings');
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-5 max-w-5xl">
@@ -49,18 +66,30 @@ export default function BookingDetailsPage() {
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="text-xl font-bold">{booking.id}</h1>
-                <span className={`text-xs px-2 py-0.5 rounded-full border capitalize ${getStatusColor(booking.status)}`}>
-                  {booking.status}
-                </span>
+                <Select value={booking.status} onValueChange={handleStatusChange}>
+                  <SelectTrigger className={`w-auto h-7 text-xs px-2.5 rounded-full border capitalize ${getStatusColor(booking.status)}`}>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {STATUS_OPTIONS.map(s => (
+                      <SelectItem key={s} value={s} className="capitalize">{s}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <p className="text-sm text-muted-foreground">{booking.customerName}</p>
             </div>
           </div>
-          <Link to={`/bookings/${booking.id}/edit`}>
-            <Button variant="outline" className="gap-2">
-              <Edit className="h-4 w-4" /> Edit Booking
+          <div className="flex gap-2">
+            <Link to={`/bookings/${booking.id}/edit`}>
+              <Button variant="outline" className="gap-2">
+                <Edit className="h-4 w-4" /> Edit
+              </Button>
+            </Link>
+            <Button variant="outline" className="gap-2 text-destructive hover:text-destructive" onClick={handleDelete}>
+              <Trash2 className="h-4 w-4" /> Delete
             </Button>
-          </Link>
+          </div>
         </div>
 
         {/* Info cards */}
@@ -118,9 +147,14 @@ export default function BookingDetailsPage() {
           <h3 className="text-sm font-semibold mb-3">Travelers ({booking.travelers.length})</h3>
           <div className="space-y-2">
             {booking.travelers.map((t) => (
-              <div key={t.id} className="flex items-center justify-between py-2 px-3 rounded-lg bg-secondary/50">
-                <span className="text-sm font-medium">{t.name}</span>
-                <Badge variant="secondary" className="text-xs">{t.relationship}</Badge>
+              <div key={t.id} className="flex items-center justify-between py-2.5 px-3 rounded-lg bg-secondary/50">
+                <div className="flex items-center gap-3">
+                  <span className="text-sm font-medium">{t.name}</span>
+                  <Badge variant="secondary" className="text-xs">{t.relationship}</Badge>
+                </div>
+                {t.passportNumber && (
+                  <span className="text-xs text-muted-foreground font-mono">{t.passportNumber}</span>
+                )}
               </div>
             ))}
           </div>
